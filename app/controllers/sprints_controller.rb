@@ -1,8 +1,8 @@
 class SprintsController < AbstractSecurityController
 
-  before_filter :must_be_account_holder, only: [:set_stats]
-  before_filter :iteration_length_must_be_specified
-  before_filter :sprint_must_exist, only: [:edit, :plan, :update, :destroy, :set_stats]
+  before_action :must_be_account_holder, only: [:set_stats]
+  before_action :iteration_length_must_be_specified
+  before_action :sprint_must_exist, only: [:edit, :plan, :update, :destroy, :set_stats]
 
   def index
     store_location
@@ -41,7 +41,7 @@ class SprintsController < AbstractSecurityController
     @sprint = @project.sprints.new(sprint_params)
     if @sprint.save
       flash[:notice] = "Sprint created"
-      notify_integrations(:created)
+      notify_integrations(:sprint_created)
       redirect_to project_sprints_path(@project)
     else
       flash.now[:error] = "Sprint could not be created"
@@ -55,10 +55,10 @@ class SprintsController < AbstractSecurityController
   def update
     if @sprint && @sprint.update_attributes(sprint_params)
       flash[:notice] = "Sprint saved"
-      notify_integrations(:updated)
+      notify_integrations(:sprint_updated)
       redirect_back_or(project_sprints_path(@project))
     else
-      flash.now[:error] = "Sprint couldn't be saved"
+      flash.now[:error] = "Sprint could not be saved"
       render 'edit'
     end
   end
@@ -112,6 +112,8 @@ class SprintsController < AbstractSecurityController
   end
 
   def notify_integrations(event)
-    @project.integrations_notify("Sprint <a href=\"#{project_sprint_url(@project, @sprint)}\">##{@sprint.id}</a> <strong>#{event.to_s}</strong> by #{current_person.name}: \"#{@sprint.name}\"")
+    host = request.env['HTTP_HOST']
+    message = ChatMessage.new(host, project: @project, sprint: @sprint, person: current_person).send(event)
+    @project.integrations_notify(message)
   end
 end
