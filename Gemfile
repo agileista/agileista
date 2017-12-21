@@ -46,7 +46,7 @@ group :development do
 end
 
 group :test do
-  gem 'simplecov', '0.7.1', require: false
+  gem 'simplecov', require: false
   gem 'simplecov-console', require: false
   gem 'shoulda-matchers', require: false
   gem 'machinist'
@@ -55,7 +55,7 @@ end
 
 group :development, :test do
   gem 'rubocop', require: false
-  gem 'coveralls', require: false
+  gem 'coveralls', '>= 0.8.0', require: false
   gem 'byebug'
   gem 'rspec-rails', '~> 3.0'
   gem 'capybara'
